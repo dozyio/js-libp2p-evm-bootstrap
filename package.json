@@ -1,0 +1,157 @@
+{
+  "name": "libp2p-evm-bootstrap",
+  "version": "0.0.1",
+  "description": "Bootstrap from peer IDs stored on an EVM smart contract",
+  "license": "Apache-2.0 OR MIT",
+  "homepage": "https://github.com/dozyio/js-libp2p-evm-bootstrap#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dozyio/js-libp2p-evm-bootstrap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dozyio/js-libp2p-evm-bootstrap/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "libp2p",
+    "bootstrap",
+    "evm"
+  ],
+  "type": "module",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "!dist/test",
+    "!**/*.tsbuildinfo"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "eslintConfig": {
+    "extends": "ipfs",
+    "parserOptions": {
+      "project": true,
+      "sourceType": "module"
+    }
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            {
+              "breaking": true,
+              "release": "major"
+            },
+            {
+              "revert": true,
+              "release": "patch"
+            },
+            {
+              "type": "feat",
+              "release": "minor"
+            },
+            {
+              "type": "fix",
+              "release": "patch"
+            },
+            {
+              "type": "docs",
+              "release": "patch"
+            },
+            {
+              "type": "test",
+              "release": "patch"
+            },
+            {
+              "type": "deps",
+              "release": "patch"
+            },
+            {
+              "type": "chore",
+              "release": "patch"
+            },
+            {
+              "type": "ci",
+              "release": "patch"
+            },
+            {
+              "scope": "no-release",
+              "release": false
+            }
+          ]
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits",
+          "presetConfig": {
+            "types": [
+              {
+                "type": "feat",
+                "section": "Features"
+              },
+              {
+                "type": "fix",
+                "section": "Bug Fixes"
+              },
+              {
+                "type": "chore",
+                "section": "Trivial Changes"
+              },
+              {
+                "type": "docs",
+                "section": "Documentation"
+              },
+              {
+                "type": "deps",
+                "section": "Dependencies"
+              },
+              {
+                "type": "test",
+                "section": "Tests"
+              }
+            ]
+          }
+        }
+      ],
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/github",
+      "@semantic-release/git"
+    ]
+  },
+  "scripts": {
+    "clean": "aegir clean",
+    "lint": "aegir lint",
+    "dep-check": "aegir dep-check",
+    "build": "aegir build",
+    "test": "aegir test",
+    "test:node": "aegir test -t node --cov",
+    "test:chrome": "aegir test -t browser --cov",
+    "release": "aegir release"
+  },
+  "devDependencies": {
+    "aegir": "^45.1.1"
+  },
+  "dependencies": {
+    "@libp2p/interface": "^2.10.4",
+    "@libp2p/interface-internal": "^2.3.17",
+    "@libp2p/peer-id": "^5.1.7",
+    "ethers": "^6.14.4",
+    "main-event": "^1.0.1"
+  }
+}
