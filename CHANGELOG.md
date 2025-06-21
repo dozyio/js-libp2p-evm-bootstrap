@@ -1,3 +1,9 @@
+## [0.1.1](https://github.com/dozyio/js-libp2p-evm-bootstrap/compare/v0.1.0...v0.1.1) (2025-06-21)
+
+### Bug Fixes
+
+* ci build ([cf140e7](https://github.com/dozyio/js-libp2p-evm-bootstrap/commit/cf140e78f84481d0d2a300ac27638fbb366016af))
+
 ## [0.1.0](https://github.com/dozyio/js-libp2p-evm-bootstrap/compare/v0.0.1...v0.1.0) (2025-06-21)
 
 ### Features
