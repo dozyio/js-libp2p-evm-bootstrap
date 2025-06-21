@@ -14,26 +14,35 @@
  *
  * ```TypeScript
  * import { createLibp2p } from 'libp2p'
- * import { bootstrap } from '@dozyio/libp2p-evm-bootstrap'
+ * import { evmbootstrap } from '@dozyio/libp2p-evm-bootstrap'
  * import { BrowserProvider } from 'ethers'
+ *  import { createDelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
  *
  * const provider = new BrowserProvider(window.ethereum)
+ * const client = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
  *
  * const libp2p = await createLibp2p({
  *   peerDiscovery: [
- *     bootstrap({
+ *     evmbootstrap({
  *       contractAddress: '0x1234567890123456789012345678901234567890',
  *       contractIndex: '0x1234567890123456789012345678901234567890', // the address of the wallet that manages the bootstrappers
  *       chainId: 1n,
  *       ethereum: provider
  *     })
- *   ]
+ *   ],
+ *   services: {
+ *     delegatedRouting: () => client
+ *   }
  * })
  *
  * libp2p.addEventListener('peer:discovery', (evt) => {
  *   console.log('found peer: ', evt.detail.toString())
  * })
  * ```
+ *
+ * Test contract address on Sepolia: 0xfef23139179004d7d636a1e66316e42085640262
+ * Test contract index: 0x3ad5a918f803de563a7c5327d6cc1fb083cce9c6
+ * Test chain id: BigInt(11155111)
  */
 
 import { peerDiscoverySymbol, serviceCapabilities } from '@libp2p/interface'
@@ -147,7 +156,7 @@ class EVMBootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements Pee
     super()
 
     this.components = components
-    this.log = components.logger.forComponent('libp2p:bootstrap')
+    this.log = components.logger.forComponent('libp2p:evmbootstrap')
     this.timeout = options.timeout ?? DEFAULT_BOOTSTRAP_DISCOVERY_TIMEOUT
     this.list = []
     this.ContractClass = options.ContractClass ?? Contract
