@@ -136,7 +136,7 @@
   },
   "scripts": {
     "clean": "aegir clean",
-    "lint": "aegir lint",
+    "lint": "aegir lint --fix",
     "dep-check": "aegir dep-check",
     "build": "aegir build",
     "test": "aegir test",

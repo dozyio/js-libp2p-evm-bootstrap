@@ -278,11 +278,11 @@ export function evmbootstrap (init: BootstrapInit): (components: BootstrapCompon
 
 export function toEthersProvider (input: Provider | any): Provider {
   // If already an ethers Provider, return as is
-  if (input && typeof input.getNetwork === 'function') {
+  if (input != null && typeof input.getNetwork === 'function') {
     return input as Provider
   }
   // If looks like an EIP-1193 provider, wrap it
-  if (input && typeof window !== 'undefined' && input.request) {
+  if (input != null && typeof window !== 'undefined' && typeof input.request === 'function') {
     return new BrowserProvider(input)
   }
   throw new Error('Invalid provider: must be an ethers Provider or EIP-1193 provider')

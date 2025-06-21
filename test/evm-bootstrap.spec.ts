@@ -1,11 +1,9 @@
 /* eslint-env mocha */
-import { start, stop, peerDiscoverySymbol } from '@libp2p/interface'
 import { type defaultLogger } from '@libp2p/logger'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
-import { Contract, BrowserProvider } from 'ethers'
-import * as ethers from 'ethers'
+import { Contract } from 'ethers'
 import sinon from 'sinon'
 import { stubInterface } from 'sinon-ts'
 import { evmbootstrap } from '../src/index.js'
@@ -50,9 +48,11 @@ describe('evmbootstrap', () => {
 
     // Create a mock logger with stubbed methods
     const componentLogger = Object.assign(
+      // eslint-disable-next-line no-console
       (...args: any[]) => { console.log('[LOG]', ...args) },
       {
         error: sinon.stub(),
+        // eslint-disable-next-line no-console
         trace: (...args: any[]) => { console.log('[TRACE]', ...args) },
         enabled: true
       }
@@ -76,7 +76,7 @@ describe('evmbootstrap', () => {
 
   afterEach(() => {
     // Clear any remaining timers
-    if (clock) {
+    if (clock !== undefined) {
       clock.restore()
     }
 
@@ -99,25 +99,25 @@ describe('evmbootstrap', () => {
     } as const
 
     it('throws if missing contractAddress', () => {
-      // @ts-expect-error
+      // @ts-expect-error should error
       expect(() => evmbootstrap({ ...goodInit, contractAddress: null })(components))
         .to.throw('EVMBootstrap requires a contract address')
     })
 
     it('throws if missing contractIndex', () => {
-      // @ts-expect-error
+      // @ts-expect-error should error
       expect(() => evmbootstrap({ ...goodInit, contractIndex: null })(components))
         .to.throw('EVMBootstrap requires a contract index')
     })
 
     it('throws if missing chainId', () => {
-      // @ts-expect-error
+      // @ts-expect-error should error
       expect(() => evmbootstrap({ ...goodInit, chainId: null })(components))
         .to.throw('EVMBootstrap requires a chain id')
     })
 
     it('throws if missing ethereum', () => {
-      // @ts-expect-error
+      // @ts-expect-error should error
       expect(() => evmbootstrap({ ...goodInit, ethereum: null })(components))
         .to.throw('EVMBootstrap requires an ethereum provider')
     })
@@ -198,7 +198,7 @@ describe('evmbootstrap', () => {
       instance.start()
       expect(instance.isStarted()).to.be.true()
 
-      if (clock) {
+      if (clock !== undefined) {
         clock.tick(5000)
         // Should still be true, timer is not auto-cleared
         expect(instance.isStarted()).to.be.true()
@@ -213,7 +213,7 @@ describe('evmbootstrap', () => {
       instance.start()
       expect(instance.isStarted()).to.be.true()
 
-      if (clock) {
+      if (clock !== undefined) {
         clock.tick(5000)
         // Should still be true, timer is not auto-cleared
         expect(instance.isStarted()).to.be.true()
@@ -259,7 +259,7 @@ describe('evmbootstrap', () => {
         err = e
       }
       expect(err).to.exist()
-      expect(err!.message).to.match(/Wrong network/)
+      expect(err?.message).to.match(/Wrong network/)
 
       // Get the component logger that was created
       const componentLogger = mockLogger.forComponent.returnValues[0]
@@ -271,10 +271,8 @@ describe('evmbootstrap', () => {
     it('discovers, tags, emits peer events and dials', async () => {
       // Fake contract class for dependency injection
       const fakeContractInstance = { getAllPeerIds: sinon.stub().resolves(mockPeerIds) }
-      class FakeContract {
-        constructor (_address: string | any, _abi: any, _runner?: any) {
-          return fakeContractInstance
-        }
+      const FakeContract = function (_address: string | any, _abi: any, _runner?: any): any {
+        return fakeContractInstance
       }
 
       // stub peerRouting.findPeer → PeerInfo
@@ -327,10 +325,8 @@ describe('evmbootstrap', () => {
     it('logs and swallows errors from ethers.Contract', async () => {
       // Stub the Contract constructor to throw
       const originalContract = Contract
-        ; (global as any).Contract = class {
-        constructor () {
-          throw new Error('boom')
-        }
+        ; (global as any).Contract = function () {
+        throw new Error('boom')
       }
 
       await instance._discoverBootstrapPeers()
@@ -353,7 +349,7 @@ describe('evmbootstrap', () => {
         ethereum: stubProvider
       })
       const instance = factory(components as any)
-      expect(instance).to.exist
+      expect(instance).to.exist()
     })
   })
 })
