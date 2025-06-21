@@ -8,7 +8,7 @@
  * They will be tagged with a tag with the name `'evmbootstrap'` tag, the value `50` and it will expire after two minutes which means the nodes connections may be closed if the maximum number of connections is reached.
  *
  * Clients that need constant connections to bootstrap nodes (e.g. browsers) can set the TTL to `Infinity`.
- * 
+ *
  * @example Configuring the evm bootstrap module
  *
  *
@@ -38,12 +38,11 @@
 
 import { peerDiscoverySymbol, serviceCapabilities } from '@libp2p/interface'
 import { peerIdFromString } from '@libp2p/peer-id'
+import { Contract, BrowserProvider } from 'ethers'
 import { TypedEventEmitter } from 'main-event'
-import type { Provider } from 'ethers'
 import type { ComponentLogger, Logger, PeerDiscovery, PeerDiscoveryEvents, PeerInfo, PeerRouting, PeerStore, Startable } from '@libp2p/interface'
 import type { ConnectionManager } from '@libp2p/interface-internal'
-import { Contract } from 'ethers'
-import { BrowserProvider } from 'ethers'
+import type { Provider } from 'ethers'
 
 const DEFAULT_BOOTSTRAP_TAG_NAME = 'evmbootstrap'
 const DEFAULT_BOOTSTRAP_TAG_VALUE = 50
@@ -57,11 +56,11 @@ const CONTRACT_ABI = [
   'function addPeerId(string calldata peerId)',
   'function setPeerId(uint8 slot, string calldata peerId)',
   'function removePeerId(uint8 slot)'
-];
+]
 
 export interface BootstrapInit {
   /**
-   * The smart contract address 
+   * The smart contract address
    */
   contractAddress: string
 
@@ -103,6 +102,11 @@ export interface BootstrapInit {
    * Cause the bootstrap peer tag to be removed after this number of ms
    */
   tagTTL?: number
+
+  /**
+   * Optionally inject a Contract class for testing
+   */
+  ContractClass?: typeof Contract
 }
 
 export interface BootstrapComponents {
@@ -124,8 +128,9 @@ class EVMBootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements Pee
   private readonly timeout: number
   private readonly components: BootstrapComponents
   private readonly _init: BootstrapInit
+  private readonly ContractClass: typeof Contract
 
-  constructor(components: BootstrapComponents, options: BootstrapInit) {
+  constructor (components: BootstrapComponents, options: BootstrapInit) {
     if (options.contractAddress == null) {
       throw new Error('EVMBootstrap requires a contract address')
     }
@@ -145,6 +150,7 @@ class EVMBootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements Pee
     this.log = components.logger.forComponent('libp2p:bootstrap')
     this.timeout = options.timeout ?? DEFAULT_BOOTSTRAP_DISCOVERY_TIMEOUT
     this.list = []
+    this.ContractClass = options.ContractClass ?? Contract
 
     this._init = {
       ...options,
@@ -160,14 +166,14 @@ class EVMBootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements Pee
     '@libp2p/peer-discovery'
   ]
 
-  isStarted(): boolean {
+  isStarted (): boolean {
     return Boolean(this.timer)
   }
 
   /**
    * Start emitting events
    */
-  start(): void {
+  start (): void {
     if (this.isStarted()) {
       return
     }
@@ -184,34 +190,44 @@ class EVMBootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements Pee
   /**
    * Emit each address in the list as a PeerInfo
    */
-  async _discoverBootstrapPeers(): Promise<void> {
+  async _discoverBootstrapPeers (): Promise<void> {
+    this.log.trace('_discoverBootstrapPeers called')
     if (this.timer == null) {
+      this.log.trace('timer is null, returning early')
       return
     }
 
-    const network = await this._init.ethereum.getNetwork();
+    this.log.trace('Getting network from ethereum provider')
+    const network = await this._init.ethereum.getNetwork()
     if (network.chainId !== this._init.chainId) {
       this.log.error(
         `Ethereum provider is connected to chainId ${network.chainId}, but expected ${this._init.chainId}. Please switch networks in your wallet.`
-      );
-      throw new Error(`Wrong network: expected chainId ${this._init.chainId}, got ${network.chainId}`);
+      )
+      throw new Error(`Wrong network: expected chainId ${this._init.chainId}, got ${network.chainId}`)
     }
 
     try {
-      const contract = new Contract(this._init.contractAddress, CONTRACT_ABI, this._init.ethereum)
+      this.log.trace('Creating contract instance')
+      const contract = new this.ContractClass(this._init.contractAddress, CONTRACT_ABI, this._init.ethereum)
+      this.log.trace('Calling getAllPeerIds')
       const peerIds = await contract.getAllPeerIds(this._init.contractIndex)
       this.log('Found %d bootstrap peers ids', peerIds.length, peerIds)
+      this.log.trace('Processing peer IDs:', peerIds)
       for (const peerIdStr of peerIds) {
         try {
+          this.log.trace('Processing peer ID:', peerIdStr)
           const peerId = peerIdFromString(peerIdStr)
           const peerInfo = await this.components.peerRouting.findPeer(peerId)
           this.list.push(peerInfo)
+          this.log.trace('Added peer info to list:', peerInfo)
         } catch (err) {
           this.log.error('Could not lookup  multiaddrs for bootstrap peer', peerIdStr, err)
         }
       }
 
+      this.log.trace('Processing peer list, count:', this.list.length)
       for (const peerData of this.list) {
+        this.log.trace('Processing peer data:', peerData)
         await this.components.peerStore.merge(peerData.id, {
           tags: {
             [this._init.tagName ?? DEFAULT_BOOTSTRAP_TAG_NAME]: {
@@ -224,11 +240,17 @@ class EVMBootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements Pee
 
         // check we are still running
         if (this.timer == null) {
+          this.log.trace('Timer is null, returning early')
           return
         }
 
+        this.log.trace('Dispatching peer event')
         this.safeDispatchEvent('peer', { detail: peerData })
+        this.log.trace('About to call openConnection for peer', peerData.id)
         this.components.connectionManager.openConnection(peerData.id)
+          .then(() => {
+            this.log.trace('Successfully called openConnection for peer', peerData.id)
+          })
           .catch(err => {
             this.log.error('could not dial bootstrap peer %p', peerData.id, err)
           })
@@ -238,11 +260,10 @@ class EVMBootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements Pee
     }
   }
 
-
   /**
    * Stop emitting events
    */
-  stop(): void {
+  stop (): void {
     if (this.timer != null) {
       clearTimeout(this.timer)
     }
@@ -251,18 +272,18 @@ class EVMBootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements Pee
   }
 }
 
-export function evmbootstrap(init: BootstrapInit): (components: BootstrapComponents) => PeerDiscovery {
+export function evmbootstrap (init: BootstrapInit): (components: BootstrapComponents) => PeerDiscovery {
   return (components: BootstrapComponents) => new EVMBootstrap(components, init)
 }
 
-function toEthersProvider(input: Provider | any): Provider {
+export function toEthersProvider (input: Provider | any): Provider {
   // If already an ethers Provider, return as is
   if (input && typeof input.getNetwork === 'function') {
-    return input as Provider;
+    return input as Provider
   }
   // If looks like an EIP-1193 provider, wrap it
   if (input && typeof window !== 'undefined' && input.request) {
-    return new BrowserProvider(input);
+    return new BrowserProvider(input)
   }
-  throw new Error('Invalid provider: must be an ethers Provider or EIP-1193 provider');
+  throw new Error('Invalid provider: must be an ethers Provider or EIP-1193 provider')
 }
