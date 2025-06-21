@@ -1,3 +1,9 @@
+## [0.1.2](https://github.com/dozyio/js-libp2p-evm-bootstrap/compare/v0.1.1...v0.1.2) (2025-06-21)
+
+### Trivial Changes
+
+* update docs, change logger to evmbootstrap ([eff6c6d](https://github.com/dozyio/js-libp2p-evm-bootstrap/commit/eff6c6d674443ad916c870297d92f928ff56d58c))
+
 ## [0.1.1](https://github.com/dozyio/js-libp2p-evm-bootstrap/compare/v0.1.0...v0.1.1) (2025-06-21)
 
 ### Bug Fixes
