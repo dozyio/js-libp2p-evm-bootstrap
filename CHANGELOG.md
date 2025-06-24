@@ -1,3 +1,9 @@
+## [0.1.4](https://github.com/dozyio/js-libp2p-evm-bootstrap/compare/v0.1.3...v0.1.4) (2025-06-24)
+
+### Trivial Changes
+
+* update readme ([70fd0de](https://github.com/dozyio/js-libp2p-evm-bootstrap/commit/70fd0de7acf24a7f77f4fabd2b58a4464379bf55))
+
 ## [0.1.3](https://github.com/dozyio/js-libp2p-evm-bootstrap/compare/v0.1.2...v0.1.3) (2025-06-24)
 
 ### Documentation
