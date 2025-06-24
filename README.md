@@ -14,9 +14,9 @@ const client = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev
 const libp2p = await createLibp2p({
   peerDiscovery: [
     evmbootstrap({
-      contractAddress: '0xfef23139179004d7d636a1e66316e42085640262',
+      contractAddress: '0xfef23139179004d7d636a1e66316e42085640262', // address of the contract
       contractIndex: '0x3ad5a918f803de563a7c5327d6cc1fb083cce9c6', // the address of the wallet that manages the bootstrappers
-      chainId: 1n,
+      chainId: BigInt(11155111),
       ethereum: provider
     })
   ],
@@ -30,13 +30,20 @@ libp2p.addEventListener('peer:discovery', (evt) => {
 })
 ```
 
+## Deployed contract details
+
+Uses IPFS bootstrappers
+
 Test contract address on Sepolia: 0xfef23139179004d7d636a1e66316e42085640262
+
 Test contract index: 0x3ad5a918f803de563a7c5327d6cc1fb083cce9c6
+
 Test chain id: BigInt(11155111)
 
-Related Repos:
-[Demo](https://dozy.io/evm-bootstrap-demo/)
-[Demo frontend source code](https://github.com/dozyio/evm-bootstrap-demo)
-[DApp demo](https://dozy.io/libp2p-evm-bootstrap-dapp/)
-[DApp source code](https://github.com/dozyio/libp2p-evm-bootstrap-dapp)
-[EVM Contract](https://github.com/dozyio/evm-bootstrap-contract)
+## Related Repos:
+
+* [Demo](https://dozy.io/evm-bootstrap-demo/)
+* [Demo frontend source code](https://github.com/dozyio/evm-bootstrap-demo)
+* [DApp demo](https://dozy.io/libp2p-evm-bootstrap-dapp/)
+* [DApp source code](https://github.com/dozyio/libp2p-evm-bootstrap-dapp)
+* [EVM Contract](https://github.com/dozyio/evm-bootstrap-contract)
